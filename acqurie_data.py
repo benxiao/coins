@@ -1,22 +1,29 @@
-
-
 import time
-import dateparser
-import pytz
 from pandas import DataFrame
 import pandas as pd
 import datetime
 from datetime import datetime, timedelta
 import numpy as np
 from binance.client import Client
-import matplotlib.pyplot as plt
+
+
+def read_config(fn):
+    config = {}
+    with open(fn,'r') as fp:
+        for line in fp:
+            if line is None:
+                break
+            k, v = [x.strip() for x in line.split('=')]
+            config[k] = v
+    return config
+
 
 def date2ts(y, m, d):
     d = datetime(y, m, d)
     return d.timestamp() * 1000
 
 
-def get_historical_klines(symbol, interval, start_time_stamp, end_time_stamp):
+def get_historical_klines(symbol, interval, start_time_stamp, end_time_stamp, **config):
     """Get Historical Klines from Binance
     See dateparse docs for valid start and end string formats http://dateparser.readthedocs.io/en/latest/
     If using offset strings for dates add "UTC" to date string e.g. "now UTC", "11 hours ago UTC"
@@ -30,7 +37,15 @@ def get_historical_klines(symbol, interval, start_time_stamp, end_time_stamp):
     :type end_str: str
     :return: list of OHLCV values
     """
+    inteval2timeframe = {
+        '1m': 60000,
+        '5m': 300000
+    }
+
+
     # create the Binance client, no need for api key
+    apiKey = config['apiKey']
+    secretKey = config['secretKey']
     client = Client(apiKey, secretKey)
 
     # init our list
@@ -40,7 +55,7 @@ def get_historical_klines(symbol, interval, start_time_stamp, end_time_stamp):
     limit = 500000
 
     # convert interval to useful value in seconds
-    timeframe = interval_to_milliseconds(interval)
+    # timeframe = interval_to_milliseconds(interval)
 
     # convert our date strings to milliseconds
     start_ts = int(start_time_stamp)
@@ -70,10 +85,10 @@ def get_historical_klines(symbol, interval, start_time_stamp, end_time_stamp):
             output_data += temp_data
 
             # update our start timestamp using the last value in the array and add the interval timeframe
-            start_ts = temp_data[len(temp_data) - 1][0] + timeframe
+            start_ts = temp_data[len(temp_data) - 1][0] + inteval2timeframe[interval]
         else:
             # it wasn't listed yet, increment our start date
-            start_ts += timeframe
+            start_ts += inteval2timeframe[interval]
 
         idx += 1
         # check if we received less than the required limit and exit the loop
@@ -89,22 +104,29 @@ def get_historical_klines(symbol, interval, start_time_stamp, end_time_stamp):
     return output_data
 
 
-symbol = "ADABTC"
+symbol = "ICXBTC"
 columns = ["time", "open", "high", "low", "close", "volume", "time2", "quote_asset_volume", "trades", "base", "quote", "ignore"]
 interval = Client.KLINE_INTERVAL_1MINUTE
+config = read_config(".cred")
+print(interval)
 
 
 # open a file with filename including symbol, interval and start and end converted to milliseconds
 # print(klines)
 ts = date2ts(2018, 2, 1)
-for i in range(1000):
-    ts2 = ts + 3600 * 1000
-    result = get_historical_klines(symbol, interval, ts, ts2)
-    time.sleep(1)
-    df = DataFrame(result[1:])
-    df.columns = columns
-    df.to_csv(f"{symbol}-{ts}.csv")
-    ts = ts2
+while 1:
+    try:
+        ts2 = ts + 3600 * 1000
+        result = get_historical_klines(symbol, interval, ts, ts2, **config)
+        time.sleep(1)
+        df = DataFrame(result[1:])
+        df.columns = columns
+        fn = f"{symbol}-{ts}.csv"
+        print(f"write to {fn}")
+        df.to_csv(fn)
+        ts = ts2
+    except:
+        pass
 
 
 # """
