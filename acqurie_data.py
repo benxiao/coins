@@ -42,7 +42,6 @@ def get_historical_klines(symbol, interval, start_time_stamp, end_time_stamp, **
         '5m': 300000
     }
 
-
     # create the Binance client, no need for api key
     apiKey = config['apiKey']
     secretKey = config['secretKey']
@@ -51,8 +50,8 @@ def get_historical_klines(symbol, interval, start_time_stamp, end_time_stamp, **
     # init our list
     output_data = []
 
-    # setup the max limit
-    limit = 500000
+    # setup the max limit (I think the limit is 500), so do be careful
+    limit = 1000
 
     # convert interval to useful value in seconds
     # timeframe = interval_to_milliseconds(interval)
@@ -95,16 +94,11 @@ def get_historical_klines(symbol, interval, start_time_stamp, end_time_stamp, **
         if len(temp_data) < limit:
             # exit the while loop
             break
-
-        # sleep after every 3rd call to be kind to the API
-        if idx % 3 == 0:
-            time.sleep(1)
-
     # print(output_data)
     return output_data
 
 
-symbol = "ICXBTC"
+symbol = "ADABTC"
 columns = ["time", "open", "high", "low", "close", "volume", "time2", "quote_asset_volume", "trades", "base", "quote", "ignore"]
 interval = Client.KLINE_INTERVAL_1MINUTE
 config = read_config(".cred")
@@ -114,19 +108,39 @@ print(interval)
 # open a file with filename including symbol, interval and start and end converted to milliseconds
 # print(klines)
 ts = date2ts(2018, 2, 1)
+counter = 0
+
 while 1:
     try:
         ts2 = ts + 3600 * 1000
         result = get_historical_klines(symbol, interval, ts, ts2, **config)
-        time.sleep(1)
+        time.sleep(4)
         df = DataFrame(result[1:])
         df.columns = columns
-        fn = f"{symbol}-{ts}.csv"
+        date = datetime.fromtimestamp(ts/1000)
+        fn = f"{symbol}-{date}.csv"
         print(f"write to {fn}")
-        df.to_csv(fn)
+        df.to_csv("data/ada/"+fn)
         ts = ts2
-    except:
-        pass
+        today = datetime.today()
+        if date.month == today.month and date.day == today.day:
+            break
+
+        # more wait
+        if counter == 100:
+            time.sleep(500)
+            counter = 0
+        else:
+            counter += 1
+
+
+
+
+    except Exception as e:
+        print("err:", type(e), e)
+        # time.sleep(500)
+        ts = ts2
+        continue
 
 
 # """
