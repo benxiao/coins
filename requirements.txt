@@ -3,3 +3,5 @@ pandas
 tabulate
 requests
 scipy
+matplotlib
+pybinance
