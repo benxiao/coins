@@ -17,19 +17,22 @@ df = df.reset_index(drop=True)
 df['time'] = pd.to_datetime(df['time'])
 #print(df)
 
-begin, finish = 1500, 2000
+begin, finish = 5500, 6000
 ax.plot(range(finish-begin), df['open'][begin: finish])
 #ax.set_xticks(list(range(begin, finish, 10)))
 
 data = list(df['open'][:finish-begin])
-segment = 25
+segment0 = 50
+segment1 = 10
 gap = 15
-lst = [1] * (segment * 2 + gap)
-for i in range(finish-begin-2*segment-gap):
-    part1 = data[i:i+segment]
-    part2 = data[i+segment+gap: i+segment*2+gap]
+lst = [1] * (segment0 + segment1 + gap)
+for i in range(finish-begin-segment0-segment1-gap):
+    part1 = data[i:i+segment0]
+    part2 = data[i+segment0+gap: i+segment0+gap+segment1]
     z = stats.zcoreForTwoDistributions(part1, part2)
-    s = stats.surprise(z, _type=stats.TestType.LessThan)
+    s = stats.surprise(z, _type=stats.TestType.GreaterThan)
+    # print("part1:", part1)
+    # print("part2:", part2)
     lst.append(s)
 
 
