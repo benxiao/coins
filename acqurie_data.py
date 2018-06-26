@@ -98,7 +98,7 @@ def get_historical_klines(symbol, interval, start_time_stamp, end_time_stamp, **
     return output_data
 
 
-symbol = "ADABTC"
+symbol = "BNBBTC"
 columns = ["time", "open", "high", "low", "close", "volume", "time2", "quote_asset_volume", "trades", "base", "quote", "ignore"]
 interval = Client.KLINE_INTERVAL_1MINUTE
 config = read_config(".cred")
@@ -120,7 +120,7 @@ while 1:
         date = datetime.fromtimestamp(ts/1000)
         fn = f"{symbol}-{date}.csv"
         print(f"write to {fn}")
-        df.to_csv("data/ada/"+fn)
+        df.to_csv("data/bnb/"+fn)
         ts = ts2
         today = datetime.today()
         if date.month == today.month and date.day == today.day:
@@ -132,10 +132,6 @@ while 1:
             counter = 0
         else:
             counter += 1
-
-
-
-
     except Exception as e:
         print("err:", type(e), e)
         # time.sleep(500)

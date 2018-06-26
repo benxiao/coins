@@ -93,7 +93,7 @@ def get_coin_history(name, start=None, end=None):
 
     today = datetime.datetime.today()
     today_str = f"{today.year}{str(today.month).zfill(2)}{str(today.day).zfill(2)}"
-    start_date_str = f"{today.year-1}{str(today.month).zfill(2)}{str(today.day).zfill(2)}"
+    start_date_str = f"{today.year-8}{str(today.month).zfill(2)}{str(today.day).zfill(2)}"
     URL = URL.format(name, start_date_str, today_str)
     print(URL)
     resp = requests.get(URL)
@@ -127,8 +127,8 @@ def show_coin_history(name, start=None, end=None):
 
 
 if __name__ == '__main__':
-    #result = get_coin_history(CARDANO)
-    # print(display(result))
-    result = get_daily_100().head(40).sort_values("vol2cap", ascending=False)
-    display(result)
-    show_coin_history(CARDANO)
+    result = get_coin_history(BITCOIN)
+    print(display(result))
+    # result = get_daily_100().head(40).sort_values("vol2cap", ascending=False)
+    # display(result)
+    # show_coin_history(CARDANO)

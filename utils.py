@@ -14,9 +14,8 @@ def read_multiple_csv_files(data_dir):
     return df.sort_values('time').reset_index(drop=True)
 
 
-
 if __name__ == '__main__':
-    df = read_multiple_csv_files('data/eth')
+    df = read_multiple_csv_files('data/bnb')
     print(df)
     start = 0
     end = len(df)
@@ -25,12 +24,12 @@ if __name__ == '__main__':
     while i < end-1:
         td = df['time'][i+1] - df['time'][i]
         if td > gap:
-            fn = f"ETHBTC_f_{df['time'][start]}_t_{df['time'][i]}.csv"
+            fn = f"BNBBTC_f_{df['time'][start]}_t_{df['time'][i]}.csv"
             print(fn)
             df[start: i+1].to_csv(fn)
             start = i+1
         i += 1
-    fn = f"ETHBTC_f_{df['time'][start]}_t_{df['time'][i]}.csv"
+    fn = f"ATABTC_f_{df['time'][start]}_t_{df['time'][i]}.csv"
     print(fn)
     df[start: i + 1].to_csv(fn)
 
