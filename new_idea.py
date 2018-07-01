@@ -1,4 +1,3 @@
-import coin_market_cap as cmc
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
@@ -12,6 +11,7 @@ for i, yy in enumerate(range(2013, 2019)):
     _df = df[df['date'].dt.year == yy]
     ax = plt.subplot(6, 1, i+1)
     ax.hist(_df['open'], 40)
+    # ax.plot(_df['date'], _df['open'])
     ax.set_title(f"year: {yy}")
 plt.tight_layout()
 plt.show()

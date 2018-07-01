@@ -111,7 +111,7 @@ def get_coin_history(name, start=None, end=None):
             except ValueError:
                 row_data[i] = np.nan
         lst.append(row_data)
-    columns = ['date', 'open', 'close', 'lowest', 'highest', 'volume (b)', 'market-cap (b)']
+    columns = ['date', 'open', 'highest', 'lowest', 'close', 'volume (b)', 'market-cap (b)']
     df = DataFrame(lst, columns=columns)
     df[columns[5]] = df[columns[5]] / 1000_000_000
     df[columns[6]] = df[columns[6]] / 1000_000_000
@@ -128,7 +128,9 @@ def show_coin_history(name, start=None, end=None):
 
 if __name__ == '__main__':
     result = get_coin_history(BITCOIN)
-    print(display(result))
+    result = result.sort_values("date")
+    result.to_csv("btc_daily.csv")
+    # rint(display(result))
     # result = get_daily_100().head(40).sort_values("vol2cap", ascending=False)
     # display(result)
     # show_coin_history(CARDANO)
