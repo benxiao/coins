@@ -30,6 +30,8 @@ def aggregated_to(df, by):
         open = x.head(1)['open'].values[0]
         close = x.tail(1)['close'].values[0]
         ma200 = x.head(1)['ma200'].values[0]
+        ma12 = x.head(1)['ma12'].values[0]
+        ma26 = x.head(1)['ma26'].values[0]
         hi = x['highest'].max()
         lo = x['lowest'].min()
         return Series(
@@ -39,7 +41,9 @@ def aggregated_to(df, by):
                 "close": close,
                 "highest": hi,
                 "lowest": lo,
-                "ma200": ma200
+                "ma200": ma200,
+                "ma26": ma26,
+                "ma12": ma12
             }
         )
     # implement weekly
@@ -50,9 +54,14 @@ def aggregate_to_2d(df):
     return aggregated_to(df, df['date'].dt.dayofyear // 2)
 
 
+def aggregate_to_3d(df):
+    return aggregated_to(df, df['date'].dt.dayofyear // 3)
+
+
 def aggregate_to_weekly(df):
     return aggregated_to(df, df['date']
                          .map(ugly_fix))
+
 
 def aggregate_to_fortnightly(df):
     return aggregated_to(df, df['date'].map(ugly_fix).map(lambda x: x // 2))

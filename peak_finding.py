@@ -12,7 +12,6 @@ def find_extremes(prices, n=25, method='max'):
         after_i = prices[i + 1: i + n + 1]
         if all(cmp(prices[i], p) for p in before_i + after_i):
             lst.append(i)
-        # find n after p
     return lst
 
 
@@ -23,13 +22,15 @@ if __name__ == '__main__':
     df = df.sort_values('date')
     df[columns] = df[columns].astype(np.float64)
     df['ma200'] = df['open'].ewm(200).mean()
-    fig = plt.figure(figsize=(32, 40))
+    df['ma26'] = df['open'].ewm(26).mean()
+    df['ma12'] = df['open'].ewm(12).mean()
     starting_year = 2013
     ending_year = 2019
     n = ending_year - starting_year
+    fig = plt.figure(figsize=(40, 50))
     for i, y in enumerate(range(starting_year, ending_year)):
         ax = plt.subplot(n, 1, i+1)
-        yearly_df = aggregate_to_2d(df[df['date'].dt.year == y])
+        yearly_df = aggregate_to_3d(df[df['date'].dt.year == y])
         plot_candlestick(
             ax, yearly_df['date'].map(lambda x: f"{x.year}-{x.month}-{x.day}"),
             yearly_df['open'], yearly_df['close'], yearly_df['lowest'], yearly_df['highest'],
@@ -37,5 +38,9 @@ if __name__ == '__main__':
         )
         ax.set_title(f"YEAR {y}")
         # plot 230 day rolling average
-        ax.plot(yearly_df['date'].map(lambda x: f"{x.year}-{x.month}-{x.day}"), yearly_df['ma200'])
+        ax.plot(yearly_df['date'].map(lambda x: f"{x.year}-{x.month}-{x.day}"), yearly_df['ma200'], linewidth=3)
+        ax.plot(yearly_df['date'].map(lambda x: f"{x.year}-{x.month}-{x.day}"), yearly_df['ma12'],
+                linestyle='dotted', color='cyan', linewidth=3)
+        ax.plot(yearly_df['date'].map(lambda x: f"{x.year}-{x.month}-{x.day}"), yearly_df['ma26'],
+                linestyle='dotted', color='red', linewidth=3)
     plt.show()
