@@ -127,9 +127,10 @@ def show_coin_history(name, start=None, end=None):
 
 
 if __name__ == '__main__':
-    result = get_coin_history(BITCOIN)
+    ticker = BITCOIN
+    result = get_coin_history(ticker)
     result = result.sort_values("date")
-    result.to_csv("btc_daily.csv")
+    result.to_csv(f"{ticker}_daily.csv")
     # rint(display(result))
     # result = get_daily_100().head(40).sort_values("vol2cap", ascending=False)
     # display(result)
