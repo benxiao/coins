@@ -7,4 +7,3 @@ matplotlib
 python-binance
 pydash
 peakutils
-pandas_datareader

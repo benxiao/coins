@@ -1,6 +1,6 @@
 import numpy as np
 import datetime
-from pandas import Series
+from pandas import Series, DataFrame
 import pandas as pd
 
 
@@ -34,9 +34,24 @@ def get_df(fn):
     return df
 
 
+def fill_to_end_of_year(df):
+    last = df.tail(1).index[0]
+    year = last.year
+    end = datetime.datetime(year+1, 1, 1)
+    index_lst = []
+    i = 1
+    while last + datetime.timedelta(days=i) < end:
+        index_lst.append(last + datetime.timedelta(days=i))
+        i += 1
+
+    filler = np.empty((len(index_lst), len(df.columns)))
+    rest = DataFrame(filler, columns=df.columns)
+    rest.index = index_lst
+    return np.concat((df, rest))
+
+
 def aggregated_to(df, by):
     def _agg(x):
-        #print("##### x:", x.head())
         date = x.head(1).index.values[0]
         open = x.head(1)['open'].values[0]
         close = x.tail(1)['close'].values[0]
@@ -45,6 +60,7 @@ def aggregated_to(df, by):
         ma26 = x.head(1)['ma26'].values[0]
         hi = x['highest'].max()
         lo = x['lowest'].min()
+        volume = x['volume'].mean()
         return Series(
             {
                 "date": date,
@@ -54,7 +70,8 @@ def aggregated_to(df, by):
                 "lowest": lo,
                 "ma200": ma200,
                 "ma26": ma26,
-                "ma12": ma12
+                "ma12": ma12,
+                "volume": volume
             }
         )
     # implement weekly

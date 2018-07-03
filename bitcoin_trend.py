@@ -3,9 +3,10 @@ import matplotlib.pyplot as plt
 import operator
 from candlestick import *
 
+cboe_futures = [(2018, 7, 18), (2018, 8, 15), (2018, 9, 19)]
+cme_futures = [(2018, 6, 29), (2018, 7, 27), (2018, 8, 31), (2018, 9, 28), (2018, 12, 28)]
+
 df = get_df('bitcoin_daily.csv')
-print(df.head())
-print(df.columns)
 starting_year = 2013
 ending_year = 2019
 n = ending_year - starting_year
