@@ -1,6 +1,7 @@
 import numpy as np
 import datetime
 from pandas import Series
+import pandas as pd
 
 
 def plot_candlestick(_ax, ts_labels, _open, close, lowest, highest, tsevery=5, bull='g', bear='r'):
@@ -22,11 +23,21 @@ def plot_candlestick(_ax, ts_labels, _open, close, lowest, highest, tsevery=5, b
     _ax.grid(axis='y', linestyle='dashed', linewidth=2)
 
 
+def get_df(fn):
+    df = pd.read_csv(fn, index_col=0)
+    df['date'] = pd.to_datetime(df['date'])
+    df = df.set_index('date')
+    df = df.astype(np.float64)
+    df['ma200'] = df['open'].ewm(200).mean()
+    df['ma26'] = df['open'].ewm(26).mean()
+    df['ma12'] = df['open'].ewm(12).mean()
+    return df
+
+
 def aggregated_to(df, by):
     def _agg(x):
-        # print(x)
-        x = x.sort_values('date')
-        date = x.head(1)['date'].values[0]
+        #print("##### x:", x.head())
+        date = x.head(1).index.values[0]
         open = x.head(1)['open'].values[0]
         close = x.tail(1)['close'].values[0]
         ma200 = x.head(1)['ma200'].values[0]
@@ -47,28 +58,29 @@ def aggregated_to(df, by):
             }
         )
     # implement weekly
-    return df.groupby(by, sort=False).apply(_agg)
+    result = df.groupby(by, sort=False).apply(_agg)
+    # print("result:", result)
+    return result.set_index('date')
 
 
 def aggregate_to_2d(df):
-    return aggregated_to(df, df['date'].dt.dayofyear // 2)
+    return aggregated_to(df, df.index.map(lambda x: x.dayofyear // 2))
 
 
 def aggregate_to_3d(df):
-    return aggregated_to(df, df['date'].dt.dayofyear // 3)
+    return aggregated_to(df, df.index.map(lambda x: x.dayofyear // 3))
 
 
 def aggregate_to_weekly(df):
-    return aggregated_to(df, df['date']
-                         .map(ugly_fix))
+    return aggregated_to(df, df.index.map(ugly_fix))
 
 
 def aggregate_to_fortnightly(df):
-    return aggregated_to(df, df['date'].map(ugly_fix).map(lambda x: x // 2))
+    return aggregated_to(df, df.index.map(ugly_fix).map(lambda x: x // 2))
 
 
 def aggregate_to_monthly(df):
-    return aggregated_to(df, df['date'].map(lambda x: f"{x.year}-{x.month}"))
+    return aggregated_to(df, df.index.map(lambda x: f"{x.year}-{x.month}"))
 
 
 def ugly_fix(x):

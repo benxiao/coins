@@ -2,7 +2,7 @@ from bs4 import BeautifulSoup
 from collections import OrderedDict
 import requests
 import pandas as pd
-import numpy  as np
+import numpy as np
 from pandas import DataFrame
 import datetime
 from tabulate import tabulate
@@ -19,6 +19,8 @@ IOTA = 'iota'
 NEO = 'neo'
 TRON = 'tron'
 ZCASH = 'zcash'
+
+watchlist = [BITCOIN, ETHEREUM, RIPPLE, BITCOINCASH, EOS, LITECOIN, CARDANO, STELLAR, IOTA, NEO, TRON, ZCASH]
 
 
 def alt(func, val, message=None):
@@ -47,17 +49,17 @@ def get_daily_100():
         data[c] = []
 
     for coin_element in coin_elements:
-        find_coin_name = lambda :coin_element.find("td", class_="currency-name").get("data-sort")
+        find_coin_name = lambda: coin_element.find("td", class_="currency-name").get("data-sort")
         coin_name = alt(find_coin_name, "UNFOUND")
-        find_price = lambda :coin_element.find("a", class_="price").get("data-usd")
+        find_price = lambda: coin_element.find("a", class_="price").get("data-usd")
         price = alt(find_price, np.nan)
-        find_percent_change = lambda :coin_element.find("td", attrs='percent-change').get("data-sort")
+        find_percent_change = lambda: coin_element.find("td", attrs='percent-change').get("data-sort")
         percent_change = alt(find_percent_change, np.nan)
-        find_market_cap = lambda : coin_element.find("td", class_="market-cap").get("data-sort")
+        find_market_cap = lambda: coin_element.find("td", class_="market-cap").get("data-sort")
         market_cap = alt(find_market_cap, np.nan)
-        find_circulating_supply = lambda :coin_element.find("td", class_="circulating-supply").get("data-sort")
+        find_circulating_supply = lambda: coin_element.find("td", class_="circulating-supply").get("data-sort")
         circulating_supply = alt(find_circulating_supply, np.nan)
-        find_volume = lambda :coin_element.find("a", class_="volume").get("data-usd")
+        find_volume = lambda: coin_element.find("a", class_="volume").get("data-usd")
         volume = alt(find_volume, np.nan)
 
         data[columns[0]].append(coin_name)
@@ -127,11 +129,8 @@ def show_coin_history(name, start=None, end=None):
 
 
 if __name__ == '__main__':
-    ticker = BITCOIN
-    result = get_coin_history(ticker)
-    result = result.sort_values("date")
-    result.to_csv(f"{ticker}_daily.csv")
-    # rint(display(result))
-    # result = get_daily_100().head(40).sort_values("vol2cap", ascending=False)
-    # display(result)
-    # show_coin_history(CARDANO)
+    for ticker in watchlist:
+        ticker = STELLAR
+        result = get_coin_history(ticker)
+        result = result.sort_values("date")
+        result.to_csv(f"{ticker}_daily.csv")
