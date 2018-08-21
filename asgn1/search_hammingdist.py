@@ -1,15 +1,5 @@
 from z_algo import zbox_search
-
-
-def get_partitions(ss, n):
-    assert n < len(ss)
-    pattern_length = len(pattern)
-    partition_length = pattern_length // n
-    partitions = []
-    for i in range(n):
-        partitions.append([i*partition_length, (i+1)*partition_length])
-    partitions[-1][1] = pattern_length
-    return partitions
+from utils import get_partitions
 
 
 if __name__ == '__main__':
@@ -36,8 +26,8 @@ if __name__ == '__main__':
             if mismatch < 2:
                 result.append((h-i, mismatch))
 
-        result = list(set(result))
-        result.sort(key=lambda x: x[0])
+    result = list(set(result))
+    result.sort(key=lambda x: x[0])
     for i, mis in result:
         print(i+1, mis)
 

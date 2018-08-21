@@ -1,45 +1,67 @@
 from z_algo import zbox_search
-from ed import levenshtein_distance
-
-
-def get_partitions(ss, n):
-    assert n < len(ss)
-    pattern_length = len(pattern)
-    partition_length = pattern_length // n
-    partitions = []
-    for i in range(n):
-        partitions.append([i*partition_length, (i+1)*partition_length])
-    partitions[-1][1] = pattern_length
-    return partitions
+from ed import levenshtein_distance_lt_1
+from utils import get_partitions
 
 
 if __name__ == '__main__':
     text = "abdyabxdcyabcdz"
     pattern = "abcd"
     pattern_length = len(pattern)
-    partitions = get_partitions(pattern, 2)
+    first_half, second_half = get_partitions(pattern, 2)
     result = []
-    for i, j in partitions:
-        ps = pattern[i:j]
-        hits = zbox_search(text, ps)
-        for h in hits:
-            i+1
-            # mismatch = 0
-            # # verify string segment before partition
-            # if i > 0:
-            #     for k in range(i):
-            #         if text[h-i+k] != pattern[k]:
-            #             mismatch += 1
-            # # verify string segment after partition
-            # if j < pattern_length:
-            #     for k in range(j, pattern_length):
-            #         if pattern[k] != text[h+k]:
-            #             mismatch += 1
-            #
-            # if mismatch < 2:
-            #     result.append((h-i, mismatch))
+    i, j = first_half
+    ps = pattern[i:j]
 
-        result = list(set(result))
-        result.sort(key=lambda x: x[0])
+    ps2 = pattern[j:pattern_length]
+    hits = zbox_search(text, ps)
+    print("first half hits:", hits)
+    for h in hits:
+        print("hit:", h)
+        # check for substitution
+        print("match substitute")
+        print(ps2, text[h+j: h+pattern_length])
+        res, d = levenshtein_distance_lt_1(ps2, text[h+j: h+pattern_length])
+        if res:
+            result.append((h, d))
+        # check for deletion
+        print(ps2, text[h+j: h+pattern_length+1])
+        res, d = levenshtein_distance_lt_1(ps2, text[h+j: h+pattern_length+1])
+        if res:
+            result.append((h, 1))
+        # check for insertion
+        print(ps2, text[h+j: h+pattern_length-1])
+        res, d = levenshtein_distance_lt_1(ps2, text[h+j: h+pattern_length-1])
+        if res:
+            result.append((h, 1))
+
+    i, j = second_half
+    print(i, j)
+
+    print("tt", i, j)
+    ps = pattern[i:j]
+    print("second half pattern:", ps)
+    ps2 = pattern[:i]
+    hits = zbox_search(text, ps)
+    print("second half hits", hits)
+    for h in hits:
+        print("hit", h)
+        # check for substitution
+        res, d = levenshtein_distance_lt_1(ps2, text[h-i: h])
+        print(ps2, text[h-i: h])
+        if res:
+            result.append((h-i, d))
+        # check for deletion
+        res, d = levenshtein_distance_lt_1(ps2, text[h-i+1: h])
+        print(ps2, text[h-i+1: h])
+        if res:
+            result.append((h-i+1, 1))
+        # check for insertion
+        res, d = levenshtein_distance_lt_1(ps2, text[h-i-1: h])
+        print(ps2, text[h-i-1: h])
+        if res:
+            result.append((h-i-1, 1))
+
+    result = list(set(result))
+    result.sort(key=lambda x: x[0])
     for i, mis in result:
         print(i+1, mis)

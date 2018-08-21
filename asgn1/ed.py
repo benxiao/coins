@@ -18,23 +18,27 @@ def levenshtein_distance_lt_1(s1, s2):
     m, n = len(s1), len(s2)
     # two strings can only be one character length apart
     if (abs(m-n)) > 1:
-        return False
+        print(s1, s2, "at least two characters apart")
+        return False, None
     count = 0
     i, j = 0, 0
     while i < m and j < n:
         if s1[i] != s2[j]:
             if count > 0:
-                return False
+                return False, None
             else:
                 count += 1
                 if m > n:
                     i += 1
                 elif m < n:
                     j += 1
+                else:
+                    j += 1
+                    i += 1
         else:
             i += 1
             j += 1
-    return True
+    return True, count
 
 
 if __name__ == '__main__':
@@ -44,3 +48,4 @@ if __name__ == '__main__':
     print(levenshtein_distance_lt_1("ac", "abc"))
     print(levenshtein_distance_lt_1("abc", "ac"))
     print(levenshtein_distance_lt_1("abc", "abcde"))
+    print(levenshtein_distance_lt_1("xd", "cd"))
