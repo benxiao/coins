@@ -30,8 +30,10 @@ def levenshtein_distance_lt_1(s1, s2):
                 count += 1
                 if m > n:
                     i += 1
+
                 elif m < n:
                     j += 1
+
                 else:
                     j += 1
                     i += 1
