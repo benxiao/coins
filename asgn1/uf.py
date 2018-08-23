@@ -15,8 +15,8 @@ class UnionFind:
         return self.parent[i]
 
     def union(self, a, b):
-        root_a = self.find(a)
-        root_b = self.find(b)
+        root_a = self.find_path_compression(a)
+        root_b = self.find_path_compression(b)
         if root_a == root_b:
             # a and b are already connected
             return
