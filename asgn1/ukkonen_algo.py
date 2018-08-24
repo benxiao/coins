@@ -11,7 +11,8 @@ class Edge:
 
 
 class Node:
-    def __init__(self):
+    def __init__(self, _id):
+        self._id = _id
         self.nodes = {}
         self.link = None
 
@@ -19,7 +20,11 @@ class Node:
         return item in self.nodes
 
     def __str__(self):
-        return f"nodes: {self.nodes}, link:{id(self.link)}"
+        return f"[node<{self.get_id()}>: {self.nodes}, link<{self.link.get_id() if (self.link) else None}>]"
+
+    def get_id(self):
+        return self._id
+
     __repr__ = __str__
 
 
@@ -67,10 +72,12 @@ def grow(root, source, start_index, end_index):
 
 
 if __name__ == '__main__':
+    #source = "abcabcabc$"
     source = "xyzxyaxyz$"
     source_length = len(source)
-
-    root = Node()
+    _id = 0
+    root = Node(_id)
+    _id += 1
     root.link = root
     end = -1
     active_node = root
@@ -129,7 +136,8 @@ if __name__ == '__main__':
                             old_edge_end = edge.end
                             edge.end = edge.start + active_length
                             oldNode = edge.nextNode
-                            newNode = Node()
+                            newNode = Node(_id)
+                            _id += 1
                             edge.nextNode = newNode
                             # point the newNode to root by default
                             newNode.link = root
@@ -165,7 +173,8 @@ if __name__ == '__main__':
                                 old_edge_end = edge.end
                                 edge.end = edge.start + active_length
                                 oldNode = edge.nextNode
-                                newNode = Node()
+                                newNode = Node(_id)
+                                _id += 1
                                 edge.nextNode = newNode
                                 # point the newNode to root by default
                                 newNode.link = root
@@ -183,6 +192,7 @@ if __name__ == '__main__':
                                 active_node = active_node.link
 
                                 prevNode.link = newNode
+                                prevNode = newNode
 
                         else:
                             # we are breaking at the middle of an edge
@@ -190,7 +200,8 @@ if __name__ == '__main__':
                             old_edge_end = edge.end
                             edge.end = edge.start + active_length
                             oldNode = edge.nextNode
-                            newNode = Node()
+                            newNode = Node(_id)
+                            _id += 1
                             edge.nextNode = newNode
                             # point the newNode to root by default
                             newNode.link = root
@@ -204,9 +215,6 @@ if __name__ == '__main__':
                             prevNode = newNode
                             # be super careful with these
                             remaining -= 1
-                            active_edge += 1
-                            if active_node is root:
-                                active_length -= 1
                             active_node = active_node.link
 
                             # when we move the active node from root to another node, we need to reset the active_length to 0
@@ -215,7 +223,7 @@ if __name__ == '__main__':
 
                             #
                             #
-                            while active_node is not root:  # this is the wrong condition
+                            while active_length:  # this is the wrong condition
                                 # we need to walk down the edge to find the corresponding we are looking for
                                 # simpified now but will have to be changed later
                                 edge = active_node.nodes[source[active_edge]]
@@ -226,7 +234,8 @@ if __name__ == '__main__':
                                 old_edge_end = edge.end
                                 edge.end = edge.start + active_length
                                 oldNode = edge.nextNode
-                                newNode = Node()
+                                newNode = Node(_id)
+                                _id += 1
                                 edge.nextNode = newNode
                                 # point the newNode to root by default
                                 newNode.link = root
@@ -237,38 +246,33 @@ if __name__ == '__main__':
                                 newNode.nodes[source[newEdge2.start]] = newEdge2
 
                                 remaining -= 1
-                                active_edge += 1
-
-                                # only when the active node is
                                 if active_node is root:
                                     active_length -= 1
+                                # only when the active node is
                                 active_node = active_node.link
 
                                 prevNode.link = newNode
-
-
-
+                                prevNode = newNode
                     # finally if it is not present on root, add it to the root
                     if not active_node.nodes.get(source[i]):
                         active_node.nodes[source[i]] = Edge(i, -1)
-                        active_length = 0
+                        # reset_active_length
+                        # that would not be necessary
+                        # active_length = 0
                         remaining -= 1
+                        # reset active_edge
+                        active_edge = -1
 
                         # hopefully remaining is 0
                         # can we check it as an invariant?
                         print(f"remaing is {remaining}")
-
                     # we are break at a node # following the suffix links
-
-
-
-
-    # source_length = len(source)
-    # for i in range(1, source_length+1):
-    #     for j in range(i):
-    #         fst_chr = source[j]
-    #         grow(root, source, j, i)
 
     print(root)
     print("active_length:", active_length)
     print("active_edge:", active_edge)
+    print("remaining:", remaining)
+    test = """
+    [node<0>: {'a': Edge(0,3) : [node<4>: {'a': Edge(3,6) : [node<1>: {'a': Edge(6,-1) : None, '$': Edge(9,-1) : None}, link<2>], '$': Edge(9,-1) : None}, link<5>], 'b': Edge(1,3) : [node<5>: {'a': Edge(3,6) : [node<2>: {'a': Edge(6,-1) : None, '$': Edge(9,-1) : None}, link<3>], '$': Edge(9,-1) : None}, link<6>], 'c': Edge(2,3) : [node<6>: {'a': Edge(3,6) : [node<3>: {'a': Edge(6,-1) : None, '$': Edge(9,-1) : None}, link<4>], '$': Edge(9,-1) : None}, link<0>], '$': Edge(9,-1) : None}, link<0>]
+    """
+    input ="abcabc"
