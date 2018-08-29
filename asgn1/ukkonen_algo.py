@@ -1,3 +1,5 @@
+LARGE = float("inf")
+
 class Edge:
     def __init__(self, start, end):
         self.start = start
@@ -5,7 +7,15 @@ class Edge:
         self.nextNode = None
 
     def __str__(self):
-        return f"Edge({self.start},{self.end}) : {self.nextNode}"
+        return f"Edge({self.start},{self.end})::{self.nextNode}"
+
+    def length(self):
+        if self.is_leaf():
+            return LARGE
+        return self.end - self.start
+
+    def is_leaf(self):
+        return self.end == -1
 
     __repr__ = __str__
 
@@ -13,14 +23,13 @@ class Edge:
 class Node:
     def __init__(self, _id):
         self._id = _id
-        self.nodes = {}
+        # root node has length 0
+        self.length = 0
+        self.edges = {}
         self.link = None
 
-    def __contains__(self, item):
-        return item in self.nodes
-
     def __str__(self):
-        return f"[node<{self.get_id()}>: {self.nodes}, link<{self.link.get_id() if (self.link) else None}>]"
+        return f"[node<{self.get_id()}> link<{self.link.get_id() if self.link else None}>: {self.edges}]"
 
     def get_id(self):
         return self._id
@@ -28,251 +37,181 @@ class Node:
     __repr__ = __str__
 
 
-def grow(root, source, start_index, end_index):
-    print("start_index: ", start_index, "end_index: ", end_index)
-    print(f"substring:({source[start_index:end_index]})")
-    edge = root.nodes.get(source[start_index])
-    if not edge:
-        print("apply rule 2a")
-        root.nodes[source[start_index]] = Edge(start_index, end_index)
-        print(root)
-        print(end='\n' * 2)
-        return
-    delta = 0
-    while edge.start + delta < edge.end and start_index + delta < end_index:
-        if source[edge.start+delta] != source[start_index+delta]:
-            print("apply rule 2b")
-            newNode = Node()
-            newEdgeA = Edge(edge.start+delta, edge.end)
-            edge.end = edge.start+delta
-            newEdgeA.nextNode = edge.nextNode
-            edge.nextNode = newNode
-            newEdgeB = Edge(start_index+delta, end_index)
-            newNode.nodes[source[newEdgeA.start]] = newEdgeA
-            newNode.nodes[source[newEdgeB.start]] = newEdgeB
-            print(root)
-            print(end='\n' * 2)
+class SuffixTree:
+    def __init__(self):
+        self.text = []
+        self.id = 0
+
+        self.root = Node(self._get_id())
+        self.root.link = self.root
+
+        self.active_node = self.root
+        self.active_length = 0
+        self.active_edge = -1
+        self.prevNode = None
+
+        self.remaining = 0
+
+    def __str__(self):
+        return str(self.root)
+
+    def _get_id(self):
+        old = self.id
+        self.id += 1
+        return old
+
+    def display_state(self):
+        print("text: ", "".join(self.text))
+        print("text: ", self.text)
+        print("iteration: ", len(self.text) - 1)
+        print("tree:", self.root)
+        print("active_node: ", self.active_node.get_id())
+        print("active_edge:", self.active_edge)
+        print("active_length:", self.active_length)
+        print("remainder:", self.remaining)
+        print()
+
+    def skip_walk(self, active_node, active_edge, active_length):
+        edge = active_node.edges[self.text[active_edge]]
+        if edge.length() > active_length:
+            self.active_node = active_node
+            self.active_length = active_length
+            self.active_edge = active_edge
             return
 
-        delta += 1
+        if edge.length() == active_length:
+            self.active_node = edge.nextNode
+            self.active_length = 0
+            #self.active_edge = active_edge
+            return
 
-    if start_index + delta == end_index:
-        print("apply rule 3")
-        print(root)
-        print(end='\n' * 2)
+        self.skip_walk(edge.nextNode, active_edge + edge.length(), active_length - edge.length())
 
-    elif edge.start + delta == edge.end:
-        if start_index + delta < end_index and edge.nextNode is not None:
-            grow(edge.nextNode, source, start_index+delta, end_index)
-        else:
-            edge.end = end_index
-            print("apply rule 1")
-            print(root)
-            print(end='\n' * 2)
+    # this method will do surgery to
+    # assume the edge being split is right next the active node
+
+    # we should leave checking for rule 3 out of this method
+
+    def insert(self, idx):
+        if self.active_length == 0:
+            if self.active_node.edges.get(self.text[idx]):
+                # we trigger rule 3
+                # remember we will come to a early stop
+                # as we match exact [j: i] position, we guarantee to match [j+1: i] position
+                self.skip_walk(self.active_node, idx, 1)
+                return None
+
+            self.active_node.edges[self.text[idx]] = Edge(idx, -1)
+            return self.active_node
+        # we are right on the active node
+        edge = self.active_node.edges[self.text[self.active_edge]]
+        old_edge_end = edge.end
+        edge.end = edge.start + self.active_length
+        oldNode = edge.nextNode
+        newNode = Node(self._get_id())
+        edge.nextNode = newNode
+        newNode.link = self.root
+        newEdge = Edge(edge.end, old_edge_end)
+        newEdge.nextNode = oldNode
+        newEdge2 = Edge(idx, -1)
+        newNode.edges[self.text[newEdge.start]] = newEdge
+        newNode.edges[self.text[newEdge2.start]] = newEdge2
+        return newNode
+
+    def add_char(self, ch):
+        self.text.append(ch)
+        i = len(self.text) - 1
+        self.prevNode = None
+        while 1:
+            if self.active_node is self.root and self.active_length == 0:
+                edge = self.root.edges.get(ch)
+                if not edge:
+                    self.root.edges[ch] = Edge(i, -1)
+                    return
+            else:
+                if self.active_length:
+                    edge = self.active_node.edges.get(self.text[self.active_edge])
+                    self.skip_walk(self.active_node, self.active_edge, self.active_length)
+                else:
+                    edge = self.active_node.edges.get(ch)
+                    if edge:
+                        self.skip_walk(self.active_node, i, self.active_length)
+
+            if edge and text[edge.start + self.active_length] == ch:
+                self.active_edge = edge.start
+                self.active_length += 1
+                self.remaining += 1
+                self.skip_walk(self.active_node, self.active_edge, self.active_length)
+                break
+
+            while 1:
+                # rule 1
+                if self.active_node is self.root:
+                    if self.active_length == 0:
+                        break
+                    new_node = self.insert(i)
+                    if new_node is None:
+                        # we encounter rule 3 shut down
+                        self.remaining += 1
+                        return
+                    self.remaining -= 1
+                    self.active_length -= 1
+                    self.active_edge += 1
+                    if self.prevNode is not None:
+                        self.prevNode.link = new_node
+                    self.prevNode = new_node
+                    if self.active_length > 0:
+                        self.skip_walk(self.active_node, self.active_edge, self.active_length)
+
+                # rule 2
+                elif self.active_node is not self.root:
+                    new_node = self.insert(i)
+                    if new_node is None:
+                        self.remaining += 1
+                        return
+                    self.remaining -= 1
+                    if self.prevNode is not None:
+                        self.prevNode.link = new_node
+                    self.prevNode = new_node
+                    self.active_node = self.active_node.link
+
+                    # skip_walk is only necessary if the active_length > 0, as the
+                    # shortest length is at least 1
+                    if self.active_node is not self.root and self.active_length > 0:
+                        self.skip_walk(self.active_node, self.active_edge, self.active_length)
+                    else:
+                        # that mean we don't have a jump and we need to use remaining to walk from [j,i] -> [j+1,i] position
+                        if self.active_node is self.root and self.remaining:
+                            self.skip_walk(self.active_node, i - self.remaining, self.remaining)
+
+
+def dfs(node, lst, text_length, length):
+    if not node:
+        lst.append(text_length-length)
+        return
+
+    for e in sorted(node.edges.keys()):
+        edge = node.edges[e]
+        edge_length = edge.length() if not edge.is_leaf() else text_length-edge.start
+        dfs(edge.nextNode, lst, text_length, length+edge_length)
 
 
 if __name__ == '__main__':
-    #source = "abcabcabc$"
-    source = "xyzxyaxyz$"
-    source_length = len(source)
-    _id = 0
-    root = Node(_id)
-    _id += 1
-    root.link = root
-    end = -1
-    active_node = root
-    active_length = 0
-    active_edge = -1 # should be a number
-    remaining = 0
-    for i in range(source_length):
-        end = i
-        remaining += 1
-        while remaining:
-            current = source[i]
-
-            if active_length == 0:
-                edge = active_node.nodes.get(current)
-                # rule 3
-                if edge:
-                    # we increment and decrement active edge
-                    # no more i shit
-                    active_edge = 0
-                    active_length = 1
-                    break # break out the loop
-
-                # the following code is wrong
-                # ToDo replace it
-                # # rule2a extension
-                # # if the edge is not present
-                else:
-                    active_node.nodes[current] = Edge(i, -1)
-                    remaining -= 1
-            else:
-                #
-                edge = active_node.nodes.get(source[active_edge])
-                # which means it is not a leaf edge
-                if edge.end != -1 and edge.end == edge.start + active_length:
-                    active_node = edge.nextNode
-                    active_length = 0
-                    active_edge = edge.end
-                    edge = edge.nextNode.nodes.get(current)
-
-                if edge and source[edge.start + active_length] == current:
-                    active_length += 1
-                    break
-
-                else:
-                    # we are breaking at a node
-                    if active_length == 0 and active_node is not root:
-                        current_node = active_node
-                        while current_node != root:
-                            current_node.nodes[current] = Edge(i, -1)
-                            remaining -= 1
-                            current_node = current_node.link
-                    else:
-                        if active_node is root:
-                            # we are breaking at the middle of an edge
-                            # we need to have some check t
-                            old_edge_end = edge.end
-                            edge.end = edge.start + active_length
-                            oldNode = edge.nextNode
-                            newNode = Node(_id)
-                            _id += 1
-                            edge.nextNode = newNode
-                            # point the newNode to root by default
-                            newNode.link = root
-                            newEdge = Edge(edge.end, old_edge_end)
-                            newEdge.nextNode = oldNode
-                            newNode.nodes[source[newEdge.start]] = newEdge
-                            newEdge2 = Edge(i, -1)
-                            newNode.nodes[source[newEdge2.start]] = newEdge2
-
-                            # save the reference of prevNode in case of future assignments
-                            prevNode = newNode
-                            # be super careful with these
-                            remaining -= 1
-                            active_edge += 1
-                            if active_node is root:
-                                active_length -= 1
-                            active_node = active_node.link
-
-                            # when we move the active node from root to another node, we need to reset the active_length to 0
-                            # so just watch the active length is not enough
-                            # ToDo
-
-                            #
-                            #
-                            while active_length: # this is the wrong condition
-                                # we need to walk down the edge to find the corresponding we are looking for
-                                # simpified now but will have to be changed later
-                                edge = active_node.nodes[source[active_edge]]
-                                print(active_length)
-                                print("edge:", edge)
-
-                                # same old same old
-                                old_edge_end = edge.end
-                                edge.end = edge.start + active_length
-                                oldNode = edge.nextNode
-                                newNode = Node(_id)
-                                _id += 1
-                                edge.nextNode = newNode
-                                # point the newNode to root by default
-                                newNode.link = root
-                                newEdge = Edge(edge.end, old_edge_end)
-                                newEdge.nextNode = oldNode
-                                newNode.nodes[source[newEdge.start]] = newEdge
-                                newEdge2 = Edge(i, -1)
-                                newNode.nodes[source[newEdge2.start]] = newEdge2
-
-                                remaining -= 1
-                                active_edge += 1
-
-                                # only when the active node is
-                                active_length -= 1
-                                active_node = active_node.link
-
-                                prevNode.link = newNode
-                                prevNode = newNode
-
-                        else:
-                            # we are breaking at the middle of an edge
-                            # we need to have some check t
-                            old_edge_end = edge.end
-                            edge.end = edge.start + active_length
-                            oldNode = edge.nextNode
-                            newNode = Node(_id)
-                            _id += 1
-                            edge.nextNode = newNode
-                            # point the newNode to root by default
-                            newNode.link = root
-                            newEdge = Edge(edge.end, old_edge_end)
-                            newEdge.nextNode = oldNode
-                            newNode.nodes[source[newEdge.start]] = newEdge
-                            newEdge2 = Edge(i, -1)
-                            newNode.nodes[source[newEdge2.start]] = newEdge2
-
-                            # save the reference of prevNode in case of future assignments
-                            prevNode = newNode
-                            # be super careful with these
-                            remaining -= 1
-                            active_node = active_node.link
-
-                            # when we move the active node from root to another node, we need to reset the active_length to 0
-                            # so just watch the active length is not enough
-                            # ToDo
-
-                            #
-                            #
-                            while active_length:  # this is the wrong condition
-                                # we need to walk down the edge to find the corresponding we are looking for
-                                # simpified now but will have to be changed later
-                                edge = active_node.nodes[source[active_edge]]
-                                print(active_length)
-                                print("edge:", edge)
-
-                                # same old same old
-                                old_edge_end = edge.end
-                                edge.end = edge.start + active_length
-                                oldNode = edge.nextNode
-                                newNode = Node(_id)
-                                _id += 1
-                                edge.nextNode = newNode
-                                # point the newNode to root by default
-                                newNode.link = root
-                                newEdge = Edge(edge.end, old_edge_end)
-                                newEdge.nextNode = oldNode
-                                newNode.nodes[source[newEdge.start]] = newEdge
-                                newEdge2 = Edge(i, -1)
-                                newNode.nodes[source[newEdge2.start]] = newEdge2
-
-                                remaining -= 1
-                                if active_node is root:
-                                    active_length -= 1
-                                # only when the active node is
-                                active_node = active_node.link
-
-                                prevNode.link = newNode
-                                prevNode = newNode
-                    # finally if it is not present on root, add it to the root
-                    if not active_node.nodes.get(source[i]):
-                        active_node.nodes[source[i]] = Edge(i, -1)
-                        # reset_active_length
-                        # that would not be necessary
-                        # active_length = 0
-                        remaining -= 1
-                        # reset active_edge
-                        active_edge = -1
-
-                        # hopefully remaining is 0
-                        # can we check it as an invariant?
-                        print(f"remaing is {remaining}")
-                    # we are break at a node # following the suffix links
-
-    print(root)
-    print("active_length:", active_length)
-    print("active_edge:", active_edge)
-    print("remaining:", remaining)
-    test = """
-    [node<0>: {'a': Edge(0,3) : [node<4>: {'a': Edge(3,6) : [node<1>: {'a': Edge(6,-1) : None, '$': Edge(9,-1) : None}, link<2>], '$': Edge(9,-1) : None}, link<5>], 'b': Edge(1,3) : [node<5>: {'a': Edge(3,6) : [node<2>: {'a': Edge(6,-1) : None, '$': Edge(9,-1) : None}, link<3>], '$': Edge(9,-1) : None}, link<6>], 'c': Edge(2,3) : [node<6>: {'a': Edge(3,6) : [node<3>: {'a': Edge(6,-1) : None, '$': Edge(9,-1) : None}, link<4>], '$': Edge(9,-1) : None}, link<0>], '$': Edge(9,-1) : None}, link<0>]
-    """
-    input ="abcabc"
+    import random
+    import navie
+    random.seed(42)
+    text = "suffix trees and bwt are related$"
+    # text = ''.join(random.choice("abcd") for _ in range(1000)) + '$'
+    navie_sa, navie_bwt = navie.get_bwt(text)
+    st = SuffixTree()
+    for i in range(len(text)):
+        st.add_char(text[i])
+    st.display_state()
+    lst = []
+    dfs(st.root, lst, len(text), 0)
+    print("suffix array: ", lst)
+    print("navie  array: ", navie_sa)
+    text_length = len(text)
+    print("".join(text[i] for i in lst))
+    print("".join(text[(i + text_length - 1) % text_length] for i in lst))
+    print(navie_bwt)
