@@ -11,10 +11,11 @@ edges = [
 
 if __name__ == '__main__':
     edges.sort(key=lambda x: x[2], reverse=True)
-    print(edges)
+    element_count = max(max(e[0] for e in edges), max(e[1] for e in edges))
+
     trees = []
-    union_find = UnionFind(6)
-    connections = 5 - 1
+    union_find = UnionFind(element_count+1)
+    connections = element_count - 1
     while connections:
         i, j, w = edges.pop()
         while union_find.find(i) == union_find.find(j):
