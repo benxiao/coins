@@ -1,5 +1,6 @@
 LARGE = float("inf")
 
+
 class Edge:
     def __init__(self, start, end):
         self.start = start
@@ -137,7 +138,7 @@ class SuffixTree:
                     if edge:
                         self.skip_walk(self.active_node, i, self.active_length)
 
-            if edge and text[edge.start + self.active_length] == ch:
+            if edge and self.text[edge.start + self.active_length] == ch:
                 self.active_edge = edge.start
                 self.active_length += 1
                 self.remaining += 1
@@ -200,13 +201,12 @@ if __name__ == '__main__':
     import random
     import navie
     random.seed(42)
-    text = "suffix trees and bwt are related$"
-    # text = ''.join(random.choice("abcd") for _ in range(1000)) + '$'
+    text = "suffix_trees_and_bwt_are_related$"
+    text = ''.join(random.choice("abcd") for _ in range(100000)) + '$'
     navie_sa, navie_bwt = navie.get_bwt(text)
     st = SuffixTree()
     for i in range(len(text)):
         st.add_char(text[i])
-    st.display_state()
     lst = []
     dfs(st.root, lst, len(text), 0)
     print("suffix array: ", lst)
@@ -214,4 +214,4 @@ if __name__ == '__main__':
     text_length = len(text)
     print("".join(text[i] for i in lst))
     print("".join(text[(i + text_length - 1) % text_length] for i in lst))
-    print(navie_bwt)
+    print(navie_sa == lst)
