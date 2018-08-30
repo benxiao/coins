@@ -1,15 +1,14 @@
 from uf import UnionFind
-
-edges = [
-    (1, 3, 3),
-    (1, 5, 6),
-    (2, 4, 9),
-    (2, 4, 8),
-    (4, 5, 7)
-]
+import sys
 
 
 if __name__ == '__main__':
+    filename = sys.argv[1]
+    edges = []
+    with open(filename, 'r') as fp:
+        for line in fp:
+            edges.append(tuple(int(x) for x in line.strip().split(maxsplit=2)))
+
     edges.sort(key=lambda x: x[2], reverse=True)
     element_count = max(max(e[0] for e in edges), max(e[1] for e in edges))
 
@@ -24,4 +23,5 @@ if __name__ == '__main__':
         union_find.union(i, j)
         connections -= 1
 
-    print(trees)
+    for i, j, l in sorted(trees, key=lambda x: x[2]):
+        print(i, j, l)
