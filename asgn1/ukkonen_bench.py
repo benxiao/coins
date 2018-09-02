@@ -4,19 +4,31 @@ import random
 import time
 
 """
-n:  10 duration:  0.00023412704467773438
-n:  100 duration:  0.002816915512084961
-n:  1000 duration:  0.0201108455657959
-n:  10000 duration:  0.25030517578125
-n:  100000 duration:  3.1776750087738037
-n:  1000000 duration:  39.950459003448486
+on  i7 4770 3.7Ghz 
+Ukkonen
+n:  10 duration:  5.1975250244140625e-05
+n:  100 duration:  0.0013833045959472656
+n:  1000 duration:  0.012046098709106445
+n:  10000 duration:  0.13390183448791504
+n:  100000 duration:  1.8934078216552734
+n:  1000000 duration:  23.977630138397217
+n:  10000000 duration:  271.77288484573364
+
+Navie
+n:  10 duration:  9.274482727050781e-05
+n:  100 duration:  0.0014100074768066406
+n:  1000 duration:  0.02798008918762207
+n:  10000 duration:  0.35556769371032715
+n:  100000 duration:  5.411811828613281
+n:  1000000 duration:  66.40487694740295
+n:  10000000 duration:  869.8641338348389
 """
 
-for n in [10, 100, 1000, 10000, 100000, 1000000]:
+for n in [10, 100, 1000, 10000, 100000, 1000000, 10000000]:
     st = SuffixTree()
     ss = "".join(random.choice("abcd") for _ in range(n))
     start = time.time()
-    # get_bwt(ss)
+    #get_bwt(ss)
     for ch in ss:
         st.add_char(ch)
     duration = time.time() - start

@@ -2,10 +2,14 @@ LARGE = float("inf")
 
 
 class Edge:
+
+    __slots__ = ['start', 'end', 'nextNode', 'suffix_id']
+
     def __init__(self, start, end):
         self.start = start
         self.end = end
         self.nextNode = None
+        self.suffix_id = None
 
     def __str__(self):
         return f"Edge({self.start},{self.end})::{self.nextNode}"
@@ -18,10 +22,17 @@ class Edge:
     def is_leaf(self):
         return self.end == -1
 
+    def get_suffix_id(self):
+        assert self.is_leaf(), "needs to check leave before make this call"
+        return self.suffix_id
+
     __repr__ = __str__
 
 
 class Node:
+
+    __slots__ = ['_id', 'length', 'edges', 'link']
+
     def __init__(self, _id):
         self._id = _id
         # root node has length 0
@@ -197,3 +208,11 @@ def dfs(node, lst, text_length, length):
         dfs(edge.nextNode, lst, text_length, length+edge_length)
 
 
+def mark_leaves(node, text_length, length):
+    for e in sorted(node.edges.keys()):
+        edge = node.edges[e]
+        edge_length = edge.length() if not edge.is_leaf() else text_length-edge.start
+        if edge.is_leaf():
+            edge.suffix_id = text_length - (length + edge_length)
+        else:
+            mark_leaves(edge.nextNode, text_length, length+edge_length)
