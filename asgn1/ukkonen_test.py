@@ -25,8 +25,8 @@ for k in range(5):
 print()
 print("n mismatch test")
 for i in range(10):
-    text = "".join(random.choice("abcd") for _ in range(1000)) + "$"
-    for j in range(3):
+    text = "".join(random.choice("abcdabcd") for _ in range(10000)) + "$"
+    for j in range(4):
         navie_result = navie.navie_search(text, "abc", i)
         better_result = indexes_with_hammingdist(text, "abc", i)
         navie_result.sort()

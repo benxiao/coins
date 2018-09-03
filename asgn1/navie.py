@@ -1,42 +1,4 @@
-class StrProxy:
-
-    __slots__ = ['text', 'start', 'end']
-    def __init__(self, text, start, end):
-        self.text = text
-        assert end > start
-        assert end <= len(self.text)
-
-        self.start = start
-        self.end = end
-
-    def __str__(self):
-        return self.text[self.start: self.end]
-
-    __repr__ = __str__
-
-    def __len__(self):
-        return self.end - self.start
-
-    def __iter__(self):
-        for i in range(self.start, self.end):
-            yield self.text[i]
-
-    def __lt__(self, other):
-        for ch0, ch1 in zip(self, other):
-            if ch0 < ch1:
-                return True
-            if ch0 > ch1:
-                return False
-        return len(self) < len(other)
-
-    def __eq__(self, other):
-        if len(self) != len(other):
-            return False
-
-        for ch0, ch1 in zip(self, other):
-            if ch0 != ch1:
-                return False
-        return True
+from utils import StrProxy
 
 
 def get_bwt(text):
@@ -54,7 +16,7 @@ def diff(str0, str1):
 def navie_search(text, pat, n):
     pat_length = len(pat)
     diffs = (diff(StrProxy(text, i, i+pat_length), pat) for i in range(len(text)-pat_length+1))
-    hits = (i for i, d in enumerate(diffs) if d <= n)
+    hits = ((i, d) for i, d in enumerate(diffs) if d <= n)
     result = list(hits)
     #print(result)
     return result
@@ -73,4 +35,4 @@ if __name__ == '__main__':
     # print("result:")
     # print("indexes:", sa)
     # print("bwt:", bwt)
-    print(navie_search("abcabcabc", "abc", 1))
+    print(navie_search("abcabcabc", "abb", 1))
